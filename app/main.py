@@ -4,7 +4,7 @@ import os
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import JSONResponse
 
-from app.gemini_client import analyze_review
+from app.openai_client import analyze_review
 from app.schemas import ReviewRequest, ReviewResponse
 
 app = FastAPI(
@@ -12,7 +12,6 @@ app = FastAPI(
     description="고객 리뷰 텍스트를 OpenAI API로 분석하여 감성, 카테고리, 요약을 반환합니다.",
     version="2.0.0",
 )
-
 
 @app.get("/health", summary="헬스 체크")
 async def health_check():

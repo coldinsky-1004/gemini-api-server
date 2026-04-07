@@ -7,7 +7,7 @@ class ReviewRequest(BaseModel):
         review_text: 감성 분석을 수행할 고객 리뷰 원문. 1자 이상이어야 합니다.
     """
 
-    review_text: str = Field(..., min_length=1, description="분석할 고객 리뷰 텍스트")
+    review_text: str = Field(..., min_length=1, max_length=1000, description="분석할 고객 리뷰 텍스트")
 
     model_config = {
         "json_schema_extra": {
@@ -26,10 +26,10 @@ class ReviewResponse(BaseModel):
         confidence:  분석 결과에 대한 신뢰도. 0.0(낮음) ~ 1.0(높음) 범위의 실수값.
     """
 
-    sentiment: str = Field(..., description="감성 분석 결과 (긍정 / 부정 / 중립)")
-    category: str = Field(..., description="리뷰 카테고리 (배송 / 품질 / 가격 / 서비스 / 기타)")
-    summary: str = Field(..., description="한 줄 요약")
-    confidence: float = Field(..., ge=0.0, le=1.0, description="신뢰도 (0.0 ~ 1.0)")
+    sentiment: str = Field(..., description="감성 분석 결과", examples=["긍정", "부정", "중립"])
+    category: str = Field(..., description="리뷰 카테고리", examples=["배송", "품질", "가격", "서비스", "기타"])
+    summary: str = Field(..., description="한 줄 요약 (1~2문장)")
+    confidence: float = Field(..., ge=0.0, le=1.0, description="분석 신뢰도 (0.0 ~ 1.0)")
 
     model_config = {
         "json_schema_extra": {
