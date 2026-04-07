@@ -1,6 +1,8 @@
 import json
+import os
 
 from fastapi import FastAPI, HTTPException
+from fastapi.responses import JSONResponse
 
 from app.gemini_client import analyze_review
 from app.schemas import ReviewRequest, ReviewResponse
@@ -11,6 +13,22 @@ app = FastAPI(
     version="2.0.0",
 )
 
+
+@app.get("/health", summary="헬스 체크")
+async def health_check():
+    """
+    서버 및 OpenAI API 키 설정 상태를 반환합니다.
+    - **status**: `ok` / `degraded`
+    - **openai_api_key**: 키 설정 여부
+    """
+    api_key_set = bool(os.environ.get("OPENAI_API_KEY"))
+    return JSONResponse(
+        status_code=200 if api_key_set else 503,
+        content={
+            "status": "ok" if api_key_set else "degraded",
+            "openai_api_key": "set" if api_key_set else "missing",
+        },
+    )
 
 @app.post("/analyze", response_model=ReviewResponse, summary="리뷰 분석")
 async def analyze(request: ReviewRequest):
