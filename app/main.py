@@ -1,47 +1,53 @@
-import json
-import os
+from contextlib import asynccontextmanager
+import logging
 
+
+from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException
-from fastapi.responses import JSONResponse
 
-from app.openai_client import analyze_review
-from app.schemas import ReviewRequest, ReviewResponse
+from app.gemini_client import ReviewAnalyzer
+from app.schema import ReviewRequest, ReviewResponse
+
+
+from pathlib import Path
+env_path = Path(__file__).resolve().parent / ".env"
+load_dotenv(dotenv_path= env_path, override=True) # True: .env 파일이 항상 시스템 환경변수를 덮어씀
+
+logger = logging.getLogger(__name__)
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    
+    try :
+        app.state.analyzer = ReviewAnalyzer()
+        logger.info("분석기 초기화 완료")
+    except ValueError as e:
+        logger.error("분석기 초기화 실패") 
+        raise
+
+    yield
+
+    logger.info("서비스 종료 중...")
+
 
 app = FastAPI(
-    title="리뷰 감성 분석 API",
-    description="고객 리뷰 텍스트를 OpenAI API로 분석하여 감성, 카테고리, 요약을 반환합니다.",
-    version="2.0.0",
+    title="고객 리뷰 분석 API",
+    description="Gemini LLM 기반 고객 리뷰 감성 분석 API",
+    version="1.0.0",
+    lifespan= lifespan
 )
 
-@app.get("/health", summary="헬스 체크")
-async def health_check():
-    """
-    서버 및 OpenAI API 키 설정 상태를 반환합니다.
-    - **status**: `ok` / `degraded`
-    - **openai_api_key**: 키 설정 여부
-    """
-    api_key_set = bool(os.environ.get("OPENAI_API_KEY"))
-    return JSONResponse(
-        status_code=200 if api_key_set else 503,
-        content={
-            "status": "ok" if api_key_set else "degraded",
-            "openai_api_key": "set" if api_key_set else "missing",
-        },
-    )
+@app.get('/health')
+def health_check():
+    return {"status" : "healthy"}
 
-@app.post("/analyze", response_model=ReviewResponse, summary="리뷰 분석")
-async def analyze(request: ReviewRequest):
-    """
-    고객 리뷰를 분석하여 다음을 반환합니다:
-    - **sentiment**: 긍정 / 부정 / 중립
-    - **category**: 배송 / 품질 / 가격 / 서비스 / 기타
-    - **summary**: 한 줄 요약
-    - **confidence**: 신뢰도 (0.0 ~ 1.0)
-    """
+@app.post("/analyze", response_model= ReviewResponse)
+def analyze_review(request : ReviewRequest):
+
     try:
-        result = await analyze_review(request.review_text)
+
+        result = app.state.analyzer.analyze(request.review_text)
         return ReviewResponse(**result)
-    except json.JSONDecodeError as e:
-        raise HTTPException(status_code=502, detail=f"OpenAI 응답 파싱 실패: {str(e)}")
+    
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
