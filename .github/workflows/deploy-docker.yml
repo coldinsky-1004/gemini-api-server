@@ -29,15 +29,15 @@ jobs:
             cd ~/github/gemini-api-server
 
             # 코드 최신화 (Private 레포 인증)
-            #git pull https://${{ secrets.GIT_TOKEN }}@github.com/blockenters/review-api-server.git main
+            #git pull https://${{ secrets.GIT_TOKEN }}@github.com/coldinsky-1004/gemini-api-server.git main
             git pull origin main
 
             # Docker 이미지 빌드
-            sudo docker build -t review-api-server .
+            sudo docker build -t gemini-api-server .
 
             # 기존 컨테이너 중지 및 삭제
-            sudo docker stop review-api || true
-            sudo docker rm review-api || true
+            sudo docker stop gemini-api || true
+            sudo docker rm gemini-api || true
 
             fuser -k 8005/tcp || true
             sleep 2
