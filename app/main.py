@@ -33,7 +33,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title="고객 리뷰 분석 API",
     description="Gemini LLM 기반 고객 리뷰 감성 분석 API",
-    version="1.0.0",
+    version="1.0.5",
     lifespan= lifespan
 )
 
